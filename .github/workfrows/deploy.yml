@@ -1,0 +1,40 @@
+# ワークフローにつける名前
+name: deploy
+
+# onはワークフローの処理を開始するきっかけを定義
+on:
+  # pushを処理のきっかけとして定義(ブランチにプッシュもしくはプルリクがマージされた時)
+  push:
+    # どのブランチに対して、マージ・どのブランチがコミットしたら実行するか定義
+    branches:
+      - main
+      - feature/push_images_to_ecr
+# 環境変数を定義(東京リージョン)
+env:
+  AWS_REGION: ap-northeast-1
+# jobs配下に任意のジョブを設定して詳細を記載する
+jobs:
+  # deployに関するjobなので、jobIDはdeployにする(jobIDといいつつ、数字じゃなく文字列)
+  deploy:
+    # job名は以下とする。github actions実行結果画面で表示される名前
+    # nameは省略可能で、省略した場合は、jobIDがジョブ名として表示される
+    name: Deploy app to AWS Fargate
+    # runs_onはワークフローが実行される環境のOSやバージョンを指定
+    runs-on: ubuntu-latest
+    steps:
+      # step名を定義
+      - name: Configure aws credentials for prod
+        #todo 最終的にはmainブランチにプッシュした時のみ実行されるようにする。今はmainブランチ以外でも動作するようにしておく
+        # mainブランチのコミットがプッシュされた時、もしくは、mainブランチにプルリクがマージされた時
+        # if: github.ref == 'refs/heads/main'
+        # usesは使用するアクション名を指定する.アクションはgithub action用に用意された処理のまとまり。AWS公式にもある
+        # 今回はAWS公式のアクションを使用する
+        # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
+        uses: aws-actions/configure-aws-credentials@v1
+        with: 
+          # ecrにイメージをプッシュするときにecrにログインする必要があるため、accesskeyとかを定義してる
+          # secretsはgithubのリポジトリに登録されたアクセスキーを参照する
+          # envはenvファイルの架橋変数を見てる
+          aws-access-key-id: ${{secrets.PROD_AWS_ACCESS_KEY_ID}}
+          aws-secret-access-key: ${{secrets.PROD_AWS_SECRET_ACCESS_KEY}}
+          aws-region: ${{env.AWS_REGION}}
