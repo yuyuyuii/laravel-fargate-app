@@ -35,6 +35,11 @@ jobs:
           # ecrにイメージをプッシュするときにecrにログインする必要があるため、accesskeyとかを定義してる
           # secretsはgithubのリポジトリに登録されたアクセスキーを参照する
           # envはenvファイルの架橋変数を見てる
-          aws-access-key-id: ${{secrets.PROD_AWS_ACCESS_KEY_ID}}
-          aws-secret-access-key: ${{secrets.PROD_AWS_SECRET_ACCESS_KEY}}
-          aws-region: ${{env.AWS_REGION}}
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          # githubにroleのarnを登録
+          # 今回は${local.name_prefix}-${local.service_name}-deployerを登録
+          role-to-assume: ${{ secrets.PROD_AWS_ASSUME_ROLE_ARN }}
+          # 権限を付与する時間を30分に設定。デフォは6時間
+          role-duration-seconds: 1800
