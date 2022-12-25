@@ -83,8 +83,7 @@ jobs:
 
       - run: docker-compose exec -T web chmod 777 /root/.npm/_logs
 
-      # - run: docker-compose exec -T web npm run prod
-      - run: docker-compose exec -T web npm run dev --loglevel verbose
+      - run: docker-compose exec -T web npm run prod
       - uses: aws-actions/amazon-ecr-login@v1
         id: amazon-ecr-login
   
