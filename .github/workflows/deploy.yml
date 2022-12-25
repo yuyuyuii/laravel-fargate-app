@@ -52,14 +52,14 @@ jobs:
         # このステップで実行するコマンドを定義
         run: echo "ENV_NAME=prod" >> $GITHUB_ENV
         # action/checkoutを使用して、github actionの環境にappの環境をcloneしてなんやかんやする
-      - uses: actions/checkout@v2
+      - uses: action/checkout@v2
         # webサーバを起動する。この後にパッケージとか必要なものをインストールするために
       - run: docker-compose up -d --build app web
         # ciツールの環境は都度都度使い捨ての環境となるが、本番環境とかパッケージが変わることはさほどないから、キャッシュを利用する様にする。
       - name: Cache composer
         id: cache-composer
         # github actions公式のアクション
-        uses: action/cache@v2
+        uses: actions/cache@v2
         with:
           # 以下のパスをキャッシュの対象とし、keyに指定した名前で保存する
           path: backend/vendor
