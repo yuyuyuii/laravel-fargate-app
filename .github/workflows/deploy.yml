@@ -12,6 +12,9 @@ on:
 # 環境変数を定義(東京リージョン)
 env:
   AWS_REGION: ap-northeast-1
+  IMAGE_TAG:  ${{ github.sha }}
+  SYSTEM_NAME: example
+  SERVICE_NAME: foobar
 # jobs配下に任意のジョブを設定して詳細を記載する
 jobs:
   # deployに関するjobなので、jobIDはdeployにする(jobIDといいつつ、数字じゃなく文字列)
@@ -43,3 +46,61 @@ jobs:
           role-to-assume: ${{ secrets.PROD_AWS_ASSUME_ROLE_ARN }}
           # 権限を付与する時間を30分に設定。デフォは6時間
           role-duration-seconds: 1800
+
+      - name: Set env vars for prod
+        # if: github.ref == 'refs/heads/main'
+        # このステップで実行するコマンドを定義
+        run: echo "ENV_NAME=prod" >> $GITHUB_ENV
+        # action/checkoutを使用して、github actionの環境にappの環境をcloneしてなんやかんやする
+      - uses: action/checkout@v2
+        # webサーバを起動する。この後にパッケージとか必要なものをインストールするために
+      - run: docker-compose up -d --build app web
+        # ciツールの環境は都度都度使い捨ての環境となるが、本番環境とかパッケージが変わることはさほどないから、キャッシュを利用する様にする。
+      - name: Cache composer
+        id: cache-composer
+        # github actions公式のアクション
+        uses: action/cache@v2
+        with:
+          # 以下のパスをキャッシュの対象とし、keyに指定した名前で保存する
+          path: backend/vendor
+          key: composer-v1-${{ hashFiles('backend/composer.lock')}}
+        # composerをインストールして、php関連のパッケージをインストールする
+        # -Tはttyを無効化するオプション。github actionsにはttyがないので、基本的にはexecを行う際は、つける
+        # -n 対話型を無効。--no-devはcomposer.jsonに記載されてる物のうちrequire-devに書かれてるものは対象外とする
+      - run: docker-compose exec -T app composer install -n --prefer-dist --no-dev
+          # アクションの中にはoutputを持つものもある。action/cacheの場合は、cache-hitというoutputを持つ
+          # ！は否定hache-hitというoutputがなければ
+        if: ${{ !steps.cache-composer.outputs.cache-hit }}
+      - name: Cache npm
+        id: cache-npm-ci
+        uses: action/checkout@v2
+        with:
+          path: backend/node_modules
+          key: npm-v1-${{ hashFiles('backend/packege-lock.json') }}
+
+      - run: docker-compose exec -T web npm ci
+        if: ${{ !steps.cache-npm-ci.outputs.cache-hit }}
+
+      - run: docker-compose exec -T web npm run prod
+      - uses: aws-actions/amazon-ecr-login@v1
+        id: amazon-ecr-login
+  
+      - name: Push nginx image to ecr
+        env:
+          # buildkitっていうのを使ってイメージをbuildする。buildkitを使うときは1にする
+          DOCKER_BUILDKIT: 1
+          # awsアカウントのID.dkr.ecr.apnortheast1.amazonaws.comっていう値が入ってる必要がある。
+          # aws-actions/amazon-ecr-loginのoutputの値から取得できる
+          ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          # push先のレポジトリ名を定義
+          ECR_REPOSITORY: ${{ env.SYSTEM_NAME }}-${{ env.ENV_NAME }}-${{ env.SERVICE_NAME }}-nginx
+          # キャッシュを利用する
+          # -tはタグをつけるよってオプション
+        run: |
+          docker build \
+            --cache-from=$ECR_REGISTRY/$ECR_REPOSITORY:latest --build-arg BUILDKIT_INLINE_CACHE=1 . \
+            -f infra/docker/nginx/Dockerfile \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
