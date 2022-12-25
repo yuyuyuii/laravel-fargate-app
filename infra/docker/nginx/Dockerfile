@@ -1,4 +1,4 @@
-FROM node:16-alpine as node
+FROM node:16 as node
 FROM nginx:1.20-alpine
 LABEL maintainer="ucan-lab <yes@u-can.pro>"
 SHELL ["/bin/ash", "-oeux", "pipefail", "-c"]
@@ -19,4 +19,5 @@ COPY ./infra/docker/nginx/*.conf /etc/nginx/conf.d/
 # ビルド時にアプリケーション側のコードがコピーされるように追記。必要なディレクトリのみマウントする
 COPY ./backend/public /work/backend/public
 
+RUN npm -v
 WORKDIR /work/backend
