@@ -95,31 +95,17 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v1
         id: amazon-ecr-login
   
-      # - name: Push nginx image to ecr
-      #   env:
-      #     # buildkitっていうのを使ってイメージをbuildする。buildkitを使うときは1にする
-      #     DOCKER_BUILDKIT: 1
-      #     # awsアカウントのID.dkr.ecr.apnortheast1.amazonaws.comっていう値が入ってる必要がある。
-      #     # aws-actions/amazon-ecr-loginのoutputの値から取得できる
-      #     ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
-      #     # push先のレポジトリ名を定義
-      #     ECR_REPOSITORY: ${{ env.SYSTEM_NAME }}-${{ env.ENV_NAME }}-${{ env.SERVICE_NAME }}-nginx
-      #     # キャッシュを利用する
-      #     # -tはタグをつけるよってオプション
-      #   run: |
-      #     docker build \
-      #       --cache-from=$ECR_REGISTRY/$ECR_REPOSITORY:latest --build-arg BUILDKIT_INLINE_CACHE=1 . \
-      #       -f infra/docker/nginx/Dockerfile \
-      #       -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-      #       -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
       - name: Push nginx image to ecr
         env:
+          # buildkitっていうのを使ってイメージをbuildする。buildkitを使うときは1にする
           DOCKER_BUILDKIT: 1
+          # awsアカウントのID.dkr.ecr.apnortheast1.amazonaws.comっていう値が入ってる必要がある。
+          # aws-actions/amazon-ecr-loginのoutputの値から取得できる
           ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          # push先のレポジトリ名を定義
           ECR_REPOSITORY: ${{ env.SYSTEM_NAME }}-${{ env.ENV_NAME }}-${{ env.SERVICE_NAME }}-nginx
+          # キャッシュを利用する
+          # -tはタグをつけるよってオプション
         run: |
           docker build \
             --cache-from=$ECR_REGISTRY/$ECR_REPOSITORY:latest --build-arg BUILDKIT_INLINE_CACHE=1 . \
