@@ -90,6 +90,12 @@ jobs:
       - name: ls -la
         run: docker-compose exec -T web ls -la /root/.npm
 
+      - name: id
+        run: docker-compose exe -T web id
+
+      - name: chown
+        run: docker-compose exec -T web chown -R 1001:123 /root/.npm
+
       - run: docker-compose exec -T web npm run prod
 
       - uses: aws-actions/amazon-ecr-login@v1
