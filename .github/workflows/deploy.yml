@@ -8,7 +8,7 @@ on:
     # どのブランチに対して、マージ・どのブランチがコミットしたら実行するか定義
     branches:
       - main
-      - feature/push_images_to_ecr
+      # - feature/push_images_to_ecr # 検証が終わったから、mainにのみ適用する
 # 環境変数を定義(東京リージョン)
 env:
   AWS_REGION: ap-northeast-1
@@ -27,9 +27,8 @@ jobs:
     steps:
       # step名を定義
       - name: Configure aws credentials for prod
-        #todo 最終的にはmainブランチにプッシュした時のみ実行されるようにする。今はmainブランチ以外でも動作するようにしておく
         # mainブランチのコミットがプッシュされた時、もしくは、mainブランチにプルリクがマージされた時
-        # if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         # usesは使用するアクション名を指定する.アクションはgithub action用に用意された処理のまとまり。AWS公式にもある
         # 今回はAWS公式のアクションを使用する
         # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
@@ -48,7 +47,7 @@ jobs:
           role-duration-seconds: 1800
 
       - name: Set env vars for prod
-        # if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         # このステップで実行するコマンドを定義
         run: echo "ENV_NAME=prod" >> $GITHUB_ENV
         # actions/checkoutを使用して、github actionの環境にappの環境をcloneしてなんやかんやする
@@ -89,7 +88,7 @@ jobs:
 
       - name: ls -la
         run: docker-compose exec -T web ls -la /root/.npm
-
+      # TODO: 以下を実行するとエラーになる問題はいつか解決させる
       # - run: docker-compose exec -T web npm run prod
 
       - uses: aws-actions/amazon-ecr-login@v1
