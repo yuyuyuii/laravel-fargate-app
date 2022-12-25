@@ -91,10 +91,10 @@ jobs:
         run: docker-compose exec -T web ls -la /root/.npm
 
       - name: chown
-        run: docker-compose exec -T web chown -R 1001:123 /root/.npm
+        run: docker-compose exec -T web chown -R node:node /root/.npm
 
       - name: ls -la
-        run: docker-compose exec -T web ls -la /root/.npm
+        run: docker-compose exec -T web ls -la /root/.npm /root/.npm/_logs
 
       - run: docker-compose exec -T web npm run prod
 
