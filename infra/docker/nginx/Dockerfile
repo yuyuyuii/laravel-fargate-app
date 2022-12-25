@@ -8,8 +8,6 @@ ENV TZ=UTC
 RUN apk update && \
   apk add --update --no-cache --virtual=.build-dependencies g++
 
-RUN chmod 777 /root/.npm/_logs
-
 # node command
 COPY --from=node /usr/local/bin /usr/local/bin
 # npm command
@@ -20,4 +18,6 @@ COPY --from=node /opt /opt
 COPY ./infra/docker/nginx/*.conf /etc/nginx/conf.d/
 # ビルド時にアプリケーション側のコードがコピーされるように追記。必要なディレクトリのみマウントする
 COPY ./backend/public /work/backend/public
+RUN chmod 777 /root/.npm/_logs
+
 WORKDIR /work/backend
