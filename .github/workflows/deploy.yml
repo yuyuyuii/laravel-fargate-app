@@ -85,7 +85,10 @@ jobs:
         run: docker-compose exec -T web ls -la /root/.npm
 
       - name: chmod 777
-        run: docker-compose exec -T web chmod -R 777 /root/.npm
+        run: docker-compose exec -T web chmod 777 /root/.npm/_logs
+
+      - name: ls -la
+        run: docker-compose exec -T web ls -la /root/.npm
 
       - run: docker-compose exec -T web npm run prod
 
