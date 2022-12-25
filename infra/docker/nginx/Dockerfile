@@ -18,6 +18,5 @@ COPY --from=node /opt /opt
 COPY ./infra/docker/nginx/*.conf /etc/nginx/conf.d/
 # ビルド時にアプリケーション側のコードがコピーされるように追記。必要なディレクトリのみマウントする
 COPY ./backend/public /work/backend/public
-RUN chmod 777 /root/.npm/_logs
 
 WORKDIR /work/backend
