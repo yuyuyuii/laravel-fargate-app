@@ -95,7 +95,7 @@ cache-clear:
 	@make optimize-clear
 	docker-compose exec app php artisan event:clear
 npm:
-	@make npm-install ionic --loglevel verbose
+	@make npm-install
 npm-install:
 	docker-compose exec web npm install
 npm-dev:
